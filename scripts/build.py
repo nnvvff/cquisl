@@ -1,7 +1,7 @@
 """Build CQUISL's portable app and one fully rendered HTML file per case."""
-from collections import Counter
 from datetime import datetime
 from html import escape
+import hashlib
 import json
 from pathlib import Path
 import shutil
@@ -18,10 +18,13 @@ TODAY = datetime.now(ZoneInfo("Asia/Hong_Kong")).date()
 DESCRIPTION = f"收录全球{len(CASES)}件国际战略性诉讼案例，提供案名、国家、法律领域、法院与年份检索，以及研究成果和原始法律文书。"
 STYLE = "index-D_rqEQot.css"
 APP = "index-B_9R2EZn.js"
+APP_VERSION = ""
 FORUM = {"domestic": "国内法院", "regional": "区域法院", "international": "国际法院", "International": "国际法院"}
 
 
 def esc(value):
+    if isinstance(value, float) and value.is_integer():
+        value = int(value)
     return escape(str(value if value is not None else ""), quote=True)
 
 
@@ -49,7 +52,7 @@ def document(title, description, path, content, *, app=False, structured=None, n
     structured = structured or {"@context": "https://schema.org", "@type": "WebPage", "name": title,
                                  "description": description, "url": canonical, "inLanguage": "zh-CN"}
     ld = json.dumps(structured, ensure_ascii=False).replace("<", "\\u003c")
-    scripts = f'<script>window.__BASENAME__={json.dumps(BASE)};</script><script type="module" src="{BASE}/assets/{APP}"></script>' if app else ""
+    scripts = f'<script>window.__BASENAME__={json.dumps(BASE)};</script><script type="module" src="{BASE}/assets/{APP}?v={APP_VERSION}"></script>' if app else ""
     body = f'<div id="root">{content}</div>' if app else content
     return f'''<!doctype html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{esc(title)}</title><meta name="description" content="{esc(description)}"><meta name="robots" content="{'noindex,follow' if noindex else 'index,follow'}">
@@ -105,7 +108,7 @@ def case_content(case, index):
         filters += f'<a class="button secondary" href="{BASE}/database/?region={quote(countries[0])}">查看{esc(countries[0])}案件</a>'
     previous = f'<a href="{case_url(CASES[index-1])}">← {esc(CASES[index-1]["name_cn"])}</a>' if index else '<span></span>'
     following = f'<a href="{case_url(CASES[index+1])}">{esc(CASES[index+1]["name_cn"])} →</a>' if index + 1 < len(CASES) else ""
-    return f'''{header()}<main class="case-main"><nav class="breadcrumb" aria-label="面包屑"><a href="{BASE}/">首页</a><span>/</span><a href="{BASE}/database/">案例数据库</a><span>/</span><span>{esc(case['id'])}</span></nav>
+    return f'''{header()}<main class="case-main"><nav class="breadcrumb" aria-label="面包屑"><a href="{BASE}/">首页</a><span>/</span><a href="{BASE}/database/">案例数据库</a></nav>
     <article><header class="case-heading"><div class="badges"><span>{esc(case.get('domain6', ''))}</span><span class="status">{esc(case.get('status', ''))}</span></div><h1>{esc(cn)}</h1><p class="english-title">{esc(en)}</p></header>
     <section class="case-section"><h2>基本信息</h2><dl class="case-facts">{facts}</dl></section>{''.join(sections)}<div class="case-actions">{filters}</div></article>
     <nav class="case-pagination" aria-label="案例翻页">{previous}{following}</nav></main>{footer()}'''
@@ -123,6 +126,7 @@ def write(path, content):
 
 
 def build_app():
+    global APP_VERSION
     source = ROOT / "source"
     for file in source.iterdir():
         if file.suffix in {".js", ".css"}:
@@ -132,6 +136,7 @@ def build_app():
     end = bundle.index("],Jre=306", start) + 1
     bundle = bundle[:start] + json.dumps(CASES, ensure_ascii=False, separators=(",", ":")) + bundle[end:]
     patches = {
+        "if(n)try{r=JSON.parse(n)}catch{}let i=t.get(`q`),a=t.get(`region`),o=t.get(`field`);": "if(n)try{r=JSON.parse(n)}catch{}if(t.has(`q`)||t.has(`region`)||t.has(`field`))r=JSON.parse(JSON.stringify(d9));let i=t.get(`q`),a=t.get(`region`),o=t.get(`field`);",
         "window.__BASENAME__||`/app/app_17b6n690wyg`": "window.__BASENAME__||`/cquisl`",
         "p=(0,P.useCallback)(e=>{let t=ad.indexOf(e);u(e),f(t>=0?t:-1)},[])": "p=(0,P.useCallback)(e=>{window.location.assign(`/cquisl/cases/${encodeURIComponent(e.id)}.html`)},[])",
         "(0,F.jsx)(`div`,{className:`font-medium text-foreground line-clamp-1`,children:e.name_cn})": "(0,F.jsx)(`a`,{href:`/cquisl/cases/${encodeURIComponent(e.id)}.html`,onClick:e=>e.stopPropagation(),className:`font-medium text-foreground line-clamp-1`,children:e.name_cn})",
@@ -141,6 +146,7 @@ def build_app():
         if bundle.count(old) != 1:
             raise ValueError(f"Expected one migration patch match, found {bundle.count(old)}: {old[:100]}")
         bundle = bundle.replace(old, new)
+    APP_VERSION = hashlib.sha256(bundle.encode()).hexdigest()[:12]
     (OUT / "assets" / APP).write_text(bundle)
     shutil.copy2(ROOT / "source/cquisl.css", OUT / "assets/cquisl.css")
     write("assets/favicon.svg", '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="12" fill="#0a3d6c"/><path d="M32 13v36m-15 0h30M15 23h34M20 23l-9 16h18zm24 0-9 16h18z" fill="none" stroke="white" stroke-width="3" stroke-linejoin="round"/></svg>')
