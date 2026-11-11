@@ -1,0 +1,8 @@
+{
+  "name": "cquisl",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "python3 scripts/build.py"
+  }
+}

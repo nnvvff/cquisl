@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://nnvvff.github.io/cquisl/sitemap.xml
