@@ -1,4 +1,4 @@
-"""Preserve the original frontend and case dialogs; adapt only hosting paths."""
+"""Preserve the original frontend and case dialogs; adapt hosting and analytics."""
 import hashlib
 import json
 from pathlib import Path
@@ -38,6 +38,8 @@ def main():
     template = template.replace(ASSET_PREFIX, BASE + "/assets/")
     template = template.replace('window.__BASENAME__ = "/app/app_17b6n690wyg";', 'window.__BASENAME__ = "/cquisl";')
     template = template.replace(f'src="{BASE}/assets/{APP}"', f'src="{BASE}/assets/{APP}?v={version}"')
+    assert template.count('</body>') == 1
+    template = template.replace('</body>', '<script defer src="/analytics.js"></script></body>')
     for name in ["index.html", "database/index.html", "research/index.html", "about/index.html", "404.html"]:
         path = OUT / name
         path.parent.mkdir(parents=True, exist_ok=True)
