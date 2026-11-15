@@ -173,14 +173,24 @@ test('bounded input rejects private fields, arbitrary paths, IDs, timestamps and
   assert.equal((await collect(h, batch([activity('pageview', { path: '/cquisl/cases/c-0001' })]))).status, 202);
 });
 
-test('strict transactional daily cap includes all test partitions and concurrent batches', async t => {
+test('collection continues beyond 5000 daily events with isolated totals and idempotent retries', async t => {
   const h = environment(); t.after(() => h.sqlite.close()); h.env.MAX_EVENTS_PER_DAY = '3';
-  const response = await collect(h, batch(Array.from({ length: 5 }, () => activity('pageview'))));
-  assert.deepEqual(await response.json(), { received: 5, inserted: 3 });
+  const day = new Date().toISOString().slice(0, 10);
+  for (const partition of [0, 1]) h.sqlite.prepare('INSERT INTO daily VALUES (?, ?, ?, ?, ?)')
+    .run('cquisl', partition, day, 'pageview', 5000);
+  const payload = batch(Array.from({ length: 5 }, () => activity('pageview')));
+  const response = await collect(h, payload);
+  assert.deepEqual(await response.json(), { received: 5, inserted: 5 });
   const responses = await Promise.all(Array.from({ length: 4 }, () => collect(h, batch([activity('search')], { is_test: true }))));
-  for (const result of responses) assert.equal((await result.json()).inserted, 0);
-  assert.equal(h.sqlite.prepare('SELECT SUM(count) AS n FROM daily').get().n, 3);
-  assert.equal((await stats(h)).totals.pageview, 3);
+  for (const result of responses) assert.equal((await result.json()).inserted, 1);
+  assert.deepEqual(await (await collect(h, payload)).json(), { received: 5, inserted: 0 });
+  assert.equal(h.sqlite.prepare('SELECT SUM(count) AS n FROM daily').get().n, 10009);
+  const real = await stats(h);
+  assert.equal(real.totals.pageview, 5005);
+  assert.equal(real.totals.search, 0);
+  const testing = await stats(h, 'days=7&is_test=1');
+  assert.equal(testing.totals.pageview, 5000);
+  assert.equal(testing.totals.search, 4);
 });
 
 test('7/30/90 UTC periods include zero days; all-time survives raw cleanup', async t => {

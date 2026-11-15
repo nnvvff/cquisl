@@ -6,7 +6,6 @@ workers_dev = true
 
 [vars]
 ALLOWED_ORIGIN = "https://nnvvff.github.io"
-MAX_EVENTS_PER_DAY = "5000"
 
 [[d1_databases]]
 binding = "DB"

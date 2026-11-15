@@ -9,11 +9,12 @@ Collection: `POST https://cquisl-analytics.baohaomineee.workers.dev/collect`.
 Report: `GET https://cquisl-analytics.baohaomineee.workers.dev/stats?site=cquisl&days=30&is_test=0`.
 Use this base URL as `data/analytics-config.json`'s `endpoint` in the parent build.
 
-Parent-confirmed deployment snapshot (2026-11-15): Worker version `b7bb9866`,
+Parent-confirmed deployment snapshot (2026-11-15): Worker version `0c94767c`,
 D1 binding `DB`, native binding `CLIENT_RATE`, no `GLOBAL_RATE`, Cron
 `17 * * * *`, and default Cloudflare Logs enabled. The real-data aggregate API
 returned zero counts at that verification. With this binding combination,
-both request-rate checks use the in-memory fallback described below.
+both request-rate checks use the in-memory fallback described below. The former
+5,000-event daily ceiling has been removed from the deployed collector.
 
 ## Parent integration
 
@@ -90,8 +91,9 @@ currently include 5 million rows read/day, 100,000 rows written/day and 5 GB tot
 storage; the [per-database limit](https://developers.cloudflare.com/d1/platform/limits/)
 is separate. Account-wide usage from other applications counts too. Free-plan
 limits can stop collection/read requests; they do not promise unlimited analytics.
-This collector caps accepted events at 5,000/day (including tests, visits and PV),
-and uses small indexed aggregates for report reads. Keep the account on Free;
+This collector has no application-defined daily event count ceiling. Collection
+still depends on the platform's available quota, request-rate protection and
+storage. Small indexed aggregates serve report reads. Keep the account on Free;
 there is no instruction here to upgrade or enable paid usage.
 
 ## Event protocol
@@ -123,8 +125,8 @@ Paths are limited to `/cquisl/`, `/cquisl/database`, `/cquisl/research`,
 valid on the homepage or database. No query strings, fragments, or report path.
 
 202 returns `{ "received": 5, "inserted": 5 }`. `inserted` can be smaller because
-of duplicates or the daily cap. A full cap drops additional events without
-changing existing counts. Clients do not retry a successful 202. Other responses:
+of duplicate events or visits. There is no per-day count cutoff; an obsolete
+`MAX_EVENTS_PER_DAY` variable has no effect. Clients do not retry a successful 202. Other responses:
 400 invalid event/JSON, 403 origin, 405 method, 413 size, 415 content type,
 429 rate limit, 503 binding/database outage. No database or exception text leaks.
 CORS preflight accepts only the configured origin, method and Content-Type.
@@ -197,13 +199,14 @@ native per-location counters: isolates/restarts have separate allowances. It
 still bounds memory and throttles bursts handled by that isolate. These edge
 limits are approximate, not global
 authentication: public browser collection cannot distinguish a forged Origin
-sent by a non-browser client. The database-side transactional 5,000-event daily
-cap is strict across locations. A quota prevents unlimited accepted writes;
-invalid/blocked traffic can still consume Worker requests. Shared network users
+sent by a non-browser client. There is no database-side daily event cap;
+platform quotas can still stop collection, and invalid/blocked traffic can
+consume Worker requests. Shared network users
 can hit the same IP limit. No claim of bot-proof traffic is made.
 
-Raw deduplication rows expire after seven days, in indexed 1,000-row hourly
-cleanup batches; daily aggregates remain for all-time totals. Thus the supported
+Raw deduplication rows become eligible for cleanup after seven days. Each hourly
+cleanup processes at most 1,000 indexed rows; sustained traffic above that cleanup
+rate can retain eligible rows longer. Daily aggregates remain for all-time totals. Thus the supported
 retry horizon is five minutes, not indefinite historical replay. Daily aggregate
 tables contain only date/type/count/site/test, with no visit identifiers.
 

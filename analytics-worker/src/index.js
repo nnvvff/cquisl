@@ -116,18 +116,15 @@ async function collect(request, env, responseHeaders) {
   const day = new Date(now).toISOString().slice(0, 10);
   const isTest = Number(payload.is_test);
   const visitKey = await digest(`cquisl:${isTest}:${payload.visit_id}`);
-  const configured = Number(env.MAX_EVENTS_PER_DAY || 5000);
-  const cap = Number.isFinite(configured) ? Math.max(1, Math.min(5000, Math.floor(configured))) : 5000;
-  // D1 batch is transactional. The per-insert guard includes earlier statements in this batch,
-  // and all sites/test partitions, so even concurrent batches cannot overrun the daily cap.
+  // No application-defined daily event ceiling. Unique indexes still deduplicate
+  // retries and visits; the insert trigger updates the daily aggregates.
   const statements = payload.events.map(event => env.DB.prepare(`
     INSERT OR IGNORE INTO events
       (site, is_test, event_id, visit_key, type, path, case_id, received_at, day)
-    SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?
-    WHERE (SELECT COALESCE(SUM(count), 0) FROM daily WHERE site = ? AND day = ?) < ?
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     RETURNING event_id
   `).bind('cquisl', isTest, event.id, visitKey, event.type, event.path,
-    event.case_id ?? null, now, day, 'cquisl', day, cap));
+    event.case_id ?? null, now, day));
   const results = await env.DB.batch(statements);
   if (results.some(result => result.success === false)) throw new Error('database');
   // D1 meta.changes includes writes made by aggregate_insert; RETURNING contains

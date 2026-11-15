@@ -16,7 +16,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS one_visit
   ON events (site, is_test, visit_key) WHERE type = 'visit';
 CREATE INDEX IF NOT EXISTS events_retention ON events (received_at);
 
--- Permanent daily aggregates. Event IDs and anonymous visit keys expire after 7 days.
+-- Permanent daily aggregates. Raw rows become eligible for cleanup after 7 days.
 CREATE TABLE IF NOT EXISTS daily (
   site TEXT NOT NULL,
   is_test INTEGER NOT NULL CHECK (is_test IN (0, 1)),
