@@ -3,6 +3,10 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "python3 scripts/build.py"
+    "build": "python3 scripts/build.py",
+    "test": "python3 -m unittest discover -s tests -p \"test_*.py\" && node --test tests/*.mjs"
+  },
+  "devDependencies": {
+    "acorn": "8.15.0"
   }
 }

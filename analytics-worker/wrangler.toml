@@ -1,0 +1,30 @@
+name = "cquisl-analytics"
+account_id = "94cdc0a6ebad3efa22699cefe2d8dd34"
+main = "src/index.js"
+compatibility_date = "2026-11-15"
+workers_dev = true
+
+[vars]
+ALLOWED_ORIGIN = "https://nnvvff.github.io"
+MAX_EVENTS_PER_DAY = "5000"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "cquisl-analytics"
+database_id = "43275b23-2f95-4f0b-89f9-bb35799601a0"
+
+[[ratelimits]]
+name = "CLIENT_RATE"
+namespace_id = "715201"
+simple = { limit = 120, period = 60 }
+
+[[ratelimits]]
+name = "GLOBAL_RATE"
+namespace_id = "715202"
+simple = { limit = 300, period = 60 }
+
+[triggers]
+crons = ["17 * * * *"]
+
+[observability]
+enabled = true

@@ -1,0 +1,19 @@
+{
+  "master_version": 102,
+  "cases": 306,
+  "countries": 85,
+  "fields": 6,
+  "app_version": "63f6fc2631c6",
+  "patches": [
+    "hosting base path",
+    "store chart component without invoking its class",
+    "exclude unknown country from map",
+    "actual master publication date",
+    "serve team image locally",
+    "serve team image locally",
+    "serve team image locally",
+    "serve team image locally",
+    "disable original platform telemetry initialization"
+  ],
+  "original_code_restored_by_reversing_patches": true
+}

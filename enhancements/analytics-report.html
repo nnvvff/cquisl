@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>访问统计 · CQUISL</title>
+  <style>
+    :root{color-scheme:light;--ink:#172c3f;--muted:#586b79;--line:#dce4e9;--blue:#215b99;--green:#187563;--gold:#a36c18}[hidden]{display:none!important}
+    *{box-sizing:border-box}body{margin:0;background:#f6f8fa;color:var(--ink);font:15px/1.6 system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
+    main{max-width:1080px;margin:auto;padding:40px 24px 64px}a{color:var(--blue);text-underline-offset:4px}header{display:flex;gap:20px;align-items:center;justify-content:space-between;margin-bottom:28px}h1{font-size:27px;line-height:1.3;margin:0;font-weight:650}h2{font-size:18px;margin:0 0 20px;font-weight:650}.toolbar{display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:24px}fieldset{display:flex;border:1px solid var(--line);padding:3px;margin:0;border-radius:8px;background:white}legend{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}button{font:inherit;cursor:pointer;border:0;background:none;color:var(--muted);padding:7px 15px;border-radius:5px}button[aria-pressed="true"]{background:var(--ink);color:white}button:focus-visible,a:focus-visible{outline:3px solid #79b8ed;outline-offset:3px}#status{margin:0;color:var(--muted);font-size:13px}#refresh{margin-left:auto;border:1px solid var(--line);background:white}button:disabled{cursor:wait;opacity:.6}.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:26px}.metric{background:white;border:1px solid var(--line);border-radius:10px;padding:18px 20px}.metric dt{color:var(--muted);font-size:13px}.metric dd{font-size:33px;line-height:1.4;font-variant-numeric:tabular-nums;margin:6px 0 0;font-weight:650}.panel{background:white;border:1px solid var(--line);border-radius:10px;padding:24px;margin-bottom:20px}.legend{display:flex;gap:20px;list-style:none;padding:0;margin:0 0 10px;font-size:13px;color:var(--muted)}.legend li:before{content:"";display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:7px;background:var(--blue)}.legend li:nth-child(2):before{background:var(--green)}.legend li:nth-child(3):before{background:var(--gold)}svg{width:100%;height:auto;display:block}#chart-empty{color:var(--muted);text-align:center;padding:48px 0}#all-time{margin:0 0 12px;font-variant-numeric:tabular-nums}footer{font-size:13px;color:var(--muted)}footer p{margin:8px 0}details{border-top:1px solid var(--line);padding-top:16px;margin-top:16px}summary{cursor:pointer;color:var(--blue)}.table-wrap{overflow-x:auto;max-height:380px;margin-top:16px}table{width:100%;border-collapse:collapse;font-size:13px;text-align:right;font-variant-numeric:tabular-nums}th,td{padding:9px 10px;border-bottom:1px solid var(--line);white-space:nowrap}th{position:sticky;top:0;background:white;font-weight:600}th:first-child,td:first-child{text-align:left}#error{color:#a52b2b;margin:0 0 20px}#error:empty{display:none}@media(max-width:620px){main{padding:26px 16px 40px}header{align-items:flex-start}h1{font-size:23px}.metrics{grid-template-columns:repeat(2,1fr);gap:10px}.metric{padding:14px}.metric dd{font-size:28px}.panel{padding:18px 14px}.toolbar{gap:10px}#status{order:3;width:100%}#refresh{padding:7px 10px}.legend{gap:14px}}
+  </style>
+</head>
+<body>
+<main>
+  <header><h1>CQUISL 访问统计</h1><a href="/cquisl/">返回网站</a></header>
+  <div class="toolbar">
+    <fieldset><legend>统计时间范围</legend><button type="button" data-days="7" aria-pressed="false">7 天</button><button type="button" data-days="30" aria-pressed="true">30 天</button><button type="button" data-days="90" aria-pressed="false">90 天</button></fieldset>
+    <p id="status" role="status" aria-live="polite">读取中…</p><button id="refresh" type="button">刷新</button>
+  </div>
+  <p id="error" role="alert"></p>
+  <dl class="metrics">
+    <div class="metric"><dt>页面浏览量 PV</dt><dd data-count="pageview">—</dd></div>
+    <div class="metric"><dt>访问次数</dt><dd data-count="visit">—</dd></div>
+    <div class="metric"><dt>操作事件</dt><dd data-count="custom_events">—</dd></div>
+    <div class="metric"><dt>案例打开</dt><dd data-count="case_open">—</dd></div>
+    <div class="metric"><dt>搜索</dt><dd data-count="search">—</dd></div>
+    <div class="metric"><dt>文书打开</dt><dd data-count="document_open">—</dd></div>
+  </dl>
+  <section class="panel" aria-labelledby="trend-title">
+    <h2 id="trend-title">每日趋势</h2>
+    <ul class="legend"><li>PV</li><li>访问次数</li><li>操作事件</li></ul>
+    <p id="chart-empty">读取中…</p><svg id="chart" viewBox="0 0 960 260" role="img" aria-label="每日统计趋势" hidden></svg>
+    <details><summary>每日明细</summary><div class="table-wrap"><table><thead><tr><th scope="col">日期 · UTC</th><th scope="col">PV</th><th scope="col">访问次数</th><th scope="col">案例打开</th><th scope="col">搜索</th><th scope="col">文书打开</th></tr></thead><tbody id="daily"></tbody></table></div></details>
+  </section>
+  <footer>
+    <p id="all-time">累计数据：—</p>
+    <p>同一浏览器的统计活动间隔达到 30 分钟，计为新一次访问，不代表独立人数。搜索仅计次数；文书打开记录链接点击，不代表下载完成。</p>
+    <p>日期按 UTC 计算，含今日。数据自独立统计启用后起计，最多延迟 60 秒；不含测试、排除此浏览器后的活动及本报表页面。历史 Cloudflare Web Analytics 数据保持独立。</p>
+  </footer>
+  <noscript>请启用 JavaScript 读取统计。</noscript>
+</main>
+<!-- Parent build supplies the Worker base URL in this attribute. No tracker belongs on this page. -->
+<script id="analytics-report" data-endpoint="__ANALYTICS_ENDPOINT__" data-default-endpoint="https://cquisl-analytics.baohaomineee.workers.dev">
+(function () {
+  'use strict';
+  var endpoint;
+  var script = document.currentScript;
+  var days = 30;
+  var active = null;
+  var serial = 0;
+  var keys = ['pageview', 'visit', 'case_open', 'search', 'document_open', 'custom_events'];
+  var number = new Intl.NumberFormat('zh-CN');
+  var status = document.getElementById('status');
+  var error = document.getElementById('error');
+  var chart = document.getElementById('chart');
+  var empty = document.getElementById('chart-empty');
+  var buttons = document.querySelectorAll('[data-days]');
+  function counts(value) {
+    return value && keys.every(function (key) { return Number.isSafeInteger(value[key]) && value[key] >= 0; }) &&
+      value.custom_events === value.case_open + value.search + value.document_open;
+  }
+  function validate(data, expected) {
+    if (!data || data.schema_version !== 1 || data.source !== 'cquisl-first-party-v1' || data.site !== 'cquisl' ||
+        data.is_test !== false || data.timezone !== 'UTC' || data.days !== expected || !counts(data.totals) ||
+        !counts(data.all_time) || !Array.isArray(data.trend) || data.trend.length !== expected ||
+        !Number.isFinite(Date.parse(data.generated_at)) || !/^\d{4}-\d{2}-\d{2}$/.test(data.start) ||
+        !/^\d{4}-\d{2}-\d{2}$/.test(data.end) ||
+        (data.first_day !== null && !/^\d{4}-\d{2}-\d{2}$/.test(data.first_day))) throw new Error('invalid');
+    var start = Date.parse(data.start + 'T00:00:00Z');
+    var sums = Object.fromEntries(keys.map(function (key) { return [key, 0]; }));
+    data.trend.forEach(function (row, index) {
+      if (!counts(row) || row.day !== new Date(start + index * 86400000).toISOString().slice(0, 10)) throw new Error('invalid');
+      keys.forEach(function (key) { sums[key] += row[key]; });
+    });
+    if (data.trend[expected - 1].day !== data.end || keys.some(function (key) {
+      return sums[key] !== data.totals[key] || data.all_time[key] < data.totals[key];
+    })) throw new Error('invalid');
+    return data;
+  }
+  function element(name, attrs, text) {
+    var node = document.createElementNS('http://www.w3.org/2000/svg', name);
+    Object.keys(attrs).forEach(function (key) { node.setAttribute(key, String(attrs[key])); });
+    if (text !== undefined) node.textContent = text;
+    chart.appendChild(node);
+  }
+  function render(data) {
+    document.querySelectorAll('[data-count]').forEach(function (node) {
+      node.textContent = number.format(data.totals[node.getAttribute('data-count')]);
+    });
+    status.textContent = data.start + ' — ' + data.end + ' · UTC';
+    document.getElementById('all-time').textContent = '累计：' + number.format(data.all_time.pageview) + ' PV · ' +
+      number.format(data.all_time.visit) + ' 次访问 · ' + number.format(data.all_time.custom_events) + ' 次操作' +
+      (data.first_day ? '（自 ' + data.first_day + ' 起）' : '（尚无记录）');
+    var tbody = document.getElementById('daily');
+    tbody.replaceChildren();
+    data.trend.slice().reverse().forEach(function (row) {
+      var tr = document.createElement('tr');
+      [row.day, row.pageview, row.visit, row.case_open, row.search, row.document_open].forEach(function (value) {
+        var td = document.createElement('td'); td.textContent = typeof value === 'number' ? number.format(value) : value; tr.appendChild(td);
+      });
+      tbody.appendChild(tr);
+    });
+    chart.replaceChildren();
+    var series = ['pageview', 'visit', 'custom_events'];
+    var max = Math.max.apply(null, data.trend.flatMap(function (row) { return series.map(function (key) { return row[key]; }); }));
+    chart.hidden = max === 0; empty.hidden = max !== 0;
+    empty.textContent = '所选时段暂无记录';
+    if (!max) return;
+    var top = Math.max(2, Math.ceil(max / 2) * 2);
+    [0, 1, 2].forEach(function (index) {
+      var y = 220 - index * 95;
+      element('line', { x1: 56, y1: y, x2: 940, y2: y, stroke: '#e7edf1' });
+      element('text', { x: 44, y: y + 4, 'text-anchor': 'end', fill: '#586b79', 'font-size': 12 }, number.format(index * top / 2));
+    });
+    [0, Math.floor((days - 1) / 2), days - 1].forEach(function (index) {
+      element('text', { x: 56 + index / (days - 1) * 884, y: 248, 'text-anchor': index === 0 ? 'start' : index === days - 1 ? 'end' : 'middle', fill: '#586b79', 'font-size': 12 }, data.trend[index].day.slice(5));
+    });
+    series.forEach(function (key, index) {
+      element('polyline', { points: data.trend.map(function (row, i) { return (56 + i / (days - 1) * 884) + ',' + (220 - row[key] / top * 190); }).join(' '),
+        fill: 'none', stroke: ['#215b99', '#187563', '#a36c18'][index], 'stroke-width': 2.5, 'stroke-linejoin': 'round' });
+    });
+  }
+  function clear() {
+    document.querySelectorAll('[data-count]').forEach(function (node) { node.textContent = '—'; });
+    document.getElementById('all-time').textContent = '累计数据：—';
+    document.getElementById('daily').replaceChildren(); chart.hidden = true; empty.hidden = false;
+  }
+  async function load() {
+    var requestId = ++serial;
+    if (active) active.abort();
+    var controller = new AbortController(); active = controller;
+    var timeout = setTimeout(function () { controller.abort(); }, 8000);
+    clear(); status.textContent = '读取中…'; empty.textContent = '读取中…'; error.textContent = '';
+    try {
+      var url = new URL(endpoint + '/stats'); url.searchParams.set('site', 'cquisl'); url.searchParams.set('days', String(days)); url.searchParams.set('is_test', '0');
+      var expected = days;
+      var response = await fetch(url.href, { credentials: 'omit', mode: 'cors', referrerPolicy: 'no-referrer', signal: controller.signal });
+      if (!response.ok || !(response.headers.get('Content-Type') || '').includes('application/json')) throw new Error('unavailable');
+      var text = await response.text(); if (text.length > 65536) throw new Error('invalid');
+      var data = validate(JSON.parse(text), expected);
+      if (requestId === serial) render(data);
+    } catch (_) {
+      if (requestId === serial) { clear(); status.textContent = '暂无法读取'; empty.textContent = '统计服务暂不可用'; error.textContent = '读取失败，请稍后刷新。'; }
+    } finally { clearTimeout(timeout); if (requestId === serial) active = null; }
+  }
+  try {
+    var endpointValue = script.getAttribute('data-endpoint') || script.getAttribute('data-analytics-endpoint');
+    if (!endpointValue || endpointValue.indexOf('__') === 0) endpointValue = script.getAttribute('data-default-endpoint');
+    var configured = new URL(endpointValue);
+    if (configured.protocol !== 'https:' || configured.username || configured.password || configured.search || configured.hash) throw new Error('endpoint');
+    endpoint = configured.href.replace(/\/+$/, '');
+  } catch (_) { clear(); status.textContent = '尚未配置统计服务'; empty.textContent = '统计服务尚未接入'; document.getElementById('refresh').disabled = true; return; }
+  buttons.forEach(function (button) { button.addEventListener('click', function () {
+    days = Number(button.getAttribute('data-days')); buttons.forEach(function (item) { item.setAttribute('aria-pressed', String(item === button)); }); void load();
+  }); });
+  document.getElementById('refresh').addEventListener('click', function () { void load(); });
+  void load();
+})();
+</script>
+</body>
+</html>
