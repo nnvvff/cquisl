@@ -66,3 +66,8 @@ Cloudflare和新事件统计共用`haomin.analytics.exclude`设置。每个浏�
 
 统计报表标记为不索引。根域名的robots.txt由个人主页仓库维护，列出两站的站点地图。
 网站代码和提交抓取请求无法保证立即收录或特定搜索排名。
+
+Bing站长后台已验证本网站，验证文件`docs/BingSiteAuth.xml`需保留。
+2026-11-15已向Bing提交上述站点地图及四个主页面；后台确认首页已收录，
+当时显示的最后抓取日期为2026-11-12，最新标题仍需等待搜索结果更新。
+后续内容更新可在[Bing站长后台](https://www.bing.com/webmasters?siteUrl=https%3A%2F%2Fnnvvff.github.io%2Fcquisl%2F)提交网址。
