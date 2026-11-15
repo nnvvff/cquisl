@@ -69,11 +69,11 @@ test('static hosting removes only the original platform telemetry initializer fr
 test('direct pages contain bilingual search metadata, static text and canonical URLs before JavaScript runs',()=>{
   for(const route of ['', 'database/', 'research/', 'about/']){
     const html=read('docs/'+route+'index.html');
-    assert.match(html,/<title>[^<]*国际战略性诉讼数据库 International Strategic Litigation Database<\/title>/);
+    assert.match(html,/<title>[^<]*国际战略性诉讼数据库International Strategic Litigation Database<\/title>/);
     assert.ok(html.includes('rel="canonical" href="https://nnvvff.github.io/cquisl/'+route+'"'));
     assert.ok(/<h1\b[^>]*>[\s\S]*?<\/h1>/.test(html),'static heading: '+route);
     const schema=JSON.parse(html.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/)[1]);
-    assert.equal(schema['@graph'][0].name,'国际战略性诉讼数据库 International Strategic Litigation Database');
+    assert.equal(schema['@graph'][0].name,'国际战略性诉讼数据库International Strategic Litigation Database');
     assert.ok(html.includes('85'));
     assert.equal(html.includes('src="https://sf3-scmcdn-cn.feishucdn.com'),false);
     assert.equal(html.includes('slardarScript'),false);

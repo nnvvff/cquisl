@@ -1,4 +1,4 @@
-# 国际战略性诉讼数据库 International Strategic Litigation Database
+# 国际战略性诉讼数据库International Strategic Litigation Database
 
 网站：https://nnvvff.github.io/cquisl/
 
